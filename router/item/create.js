@@ -1,52 +1,65 @@
-var db = require("../../models");
-const router = require('express').Router();
-const randomID = require('../../components/randomID');
+const db = require("../../models");
+const randomID = require("../../components/randomID");
 
-router.post('/', async (req, res) => {
-    await db.sequelize.sync();
-    const t = await db.sequelize.transaction();
+async function createItem(req, res) {
+  const t = await db.sequelize.transaction();
 
-    try {
-        const { name, price, cogs, qty } = req.body;
-        if (cogs > price) return res.status(400).json({ message: "cogs value cant over the db.item price" });
+  try {
+    const { name, price, cogs, qty } = req.body;
+    if (parseInt(cogs) > parseInt(price))
+      return res.status(400).json({
+        message: "cogs value can't be over the price value",
+        cogs: cogs,
+        price: price,
+      });
 
-        const id = await randomID.generateID(db.item);
+    // Process uploaded image
+    const imageUrl = req.file ? req.file.path : null;
 
-        const result = await db.item.create({
-            item_id: id,
-            owner_id: req.ses.user_id,
-            name: name,
-            price: price,
-            cogs: cogs,
-            qty: qty,
-        }, { transaction: t })
+    const id = await randomID.generateID(db.item);
 
-        const Tid = await randomID.generateID(db.transaction);
-        await db.transaction.create({
-            transaction_id: Tid,
-            clerk_id: req.ses.user_id,
-            table_id: "clerk table",
-        }, { transaction: t });
+    const result = await db.item.create(
+      {
+        item_id: id,
+        owner_id: req.ses.user_id,
+        name: name,
+        price: price,
+        cogs: cogs,
+        qty: qty,
+        image_url: imageUrl,
+      },
+      { transaction: t },
+    );
 
-        const Did = await randomID.generateID(db.detailed_transaction);
-        await db.detailed_transaction.create({
-            detailed_transaction_id: Did,
-            transaction_id: Tid,
-            item_id: id,
-            qty_stock_change: qty,
-        }, { transaction: t });
+    const Tid = await randomID.generateID(db.transaction);
+    await db.transaction.create(
+      {
+        transaction_id: Tid,
+        clerk_id: req.ses.user_id,
+        table_id: "clerk table",
+      },
+      { transaction: t },
+    );
 
-        await t.commit();
-        
-        res.status(201).json(result);
-    } catch (error) {
-        console.error("Error:", error);
-        res.status(500).json({ message: "Error creating user" });
-        await t.rollback();
-    }
-    finally {
+    const Did = await randomID.generateID(db.detailed_transaction);
+    await db.detailed_transaction.create(
+      {
+        detailed_transaction_id: Did,
+        transaction_id: Tid,
+        item_id: id,
+        qty_stock_change: qty,
+      },
+      { transaction: t },
+    );
 
-    }
-});
+    await t.commit();
 
-module.exports = router;
+    res.status(201).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    await t.rollback();
+    res.status(500).json({ message: "Error creating user" });
+  }
+}
+
+module.exports = createItem;

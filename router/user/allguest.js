@@ -1,17 +1,21 @@
 var db = require("../../models");
-const router = require('express').Router();
-const auth = require('../../components/auth');
+const router = require("express").Router();
 
-router.get('/', async (req, res) => {
-    const cek = await db.user.findOne({
-        where: { user_id: req.ses.user_id, role: "guest" }
+router.get("/", async (req, res) => {
+  try {
+    const user = await db.user.findAll({
+      where: { role: "guest" },
     });
 
-    if (!cek) {
-        return res.status(401);
+    if (!user) {
+      return res.status(404).json({ message: "No guest found" });
     }
 
-    res.status(201).json(cek.user_id);
+    return res.status(200).json(user);
+  } catch (error) {
+    console.error("Error:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
 });
 
 module.exports = router;

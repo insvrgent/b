@@ -1,8 +1,8 @@
 module.exports = (sequelize, DataTypes) => {
-  const item = sequelize.define('item', {
+  const item = sequelize.define("item", {
     item_id: {
       type: DataTypes.STRING,
-      primaryKey: true
+      primaryKey: true,
     },
     owner_id: {
       type: DataTypes.STRING,
@@ -23,6 +23,9 @@ module.exports = (sequelize, DataTypes) => {
     qty: {
       type: DataTypes.INTEGER,
       allowNull: false,
+    },
+    image_url: {
+      type: DataTypes.STRING,
     },
   });
 

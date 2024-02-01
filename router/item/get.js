@@ -1,12 +1,21 @@
-var db = require("../../models");
-const router = require('express').Router();
+const db = require("../../models");
 
-router.get('/', async (req, res) => {
+async function getItem(req, res) {
+  try {
+    const itemId = req.params.item_id;
     const get = await db.item.findOne({
-        where: { item_id: req.body.item_id }
+      where: { item_id: itemId },
     });
 
-    res.status(201).json(get);
-});
+    if (get) {
+      res.status(200).json(get);
+    } else {
+      res.status(404).json({ message: "Item not found" });
+    }
+  } catch (error) {
+    console.error("Error while fetching item:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+}
 
-module.exports = router;
+module.exports = getItem;

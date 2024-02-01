@@ -1,23 +1,22 @@
-const router = require('express').Router();
-
-var routerItem = require('require-directory')(module, '../router/item/');
-
-//get item
-router.use('/', routerItem.get);
+const router = require("express").Router();
+var routerItem = require("require-directory")(module, "../router/item/");
+const upload = require("../components/fileStorage");
 
 //get all item
-router.use('/all', routerItem.getall);
+router.get("/all", routerItem.getall);
 
-const auth = require('../components/auth');
+//get item
+router.get("/:item_id", routerItem.get);
+
+const auth = require("../components/auth");
 
 //create item
-router.use('/', auth(['admin']), routerItem.create);
-
+router.post("/", auth(["admin"]), upload.single("image"), routerItem.create);
 
 //edit item
-router.use('/', auth(['admin']), routerItem.edit);
+router.put("/", auth(["admin"]), upload.single("image"), routerItem.edit);
 
 //delete item
-router.use('/', auth(['admin']), routerItem.rm);
+router.delete("/", auth(["admin"]), routerItem.rm);
 
 module.exports = router;
